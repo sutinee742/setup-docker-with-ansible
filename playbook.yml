@@ -1,0 +1,40 @@
+---
+- hosts: all
+  gather_facts: no
+  vars_prompt:
+  - name: target_host
+    prompt: Please enter the target host IP
+    private: no
+
+  - name: username
+    prompt: Please enter your username
+    private: no
+
+  - name: password
+    prompt: Enter your password
+    private: yes
+
+  become: yes
+
+  tasks:
+    - add_host:
+        hostname: "centos01"
+        ansible_host: "{{target_host}}"
+        ansible_user: "{{username}}"
+        ansible_ssh_password: "{{password}}"
+        groups: mygroup
+
+- hosts: mygroup
+  become: true
+  tasks:
+  - name: yum update
+    raw: yum update
+
+  - name: copy file
+    copy: src=docker.repo dest=/etc/yum.repos.d/docker.repo
+
+  - name: install docker
+    yum: name=docker-engine state=present update_cache=yes
+
+  - name: docker started
+    service: name=docker state=started enabled=yes
